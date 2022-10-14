@@ -1,7 +1,5 @@
 package chat
+class MessageNoAccessException(message: String) : RuntimeException()
 
-class MessageAddingException(message: String) : RuntimeException()
+class MessageNotFoundException(message: String) : RuntimeException()
 
-class MessageDeletingException(message: String) : RuntimeException()
-
-class ChatDeletingException(message: String) : RuntimeException()
