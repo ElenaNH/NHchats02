@@ -27,11 +27,11 @@ object ChatService {
         val selectedMessages = listMessages.filter { (!it.deleted) && (user memberOf it.chat) && (it.id >= messageFromId) }
         var resultMessages = mutableListOf<Message>()
         for (msg in selectedMessages) {
+            if (counter-- <= 0) break // Если отсчитали нужно количество сообщений, то выходим
             resultMessages.add(listMessages[msg.id].copy())    // Отбираем мы все сообщения - исходящие и входящие
             if (listMessages[msg.id].to == user)
                 listMessages[msg.id] = listMessages[msg.id].copy(read = true) /* Сообщения, предназначенные
                                               данному пользователю, делаем прочитанными уже после отбора */
-            if (counter-- <= 0) break // Если отсчитали нужно количество сообщений, то выходим
         }
         return resultMessages.toList()    // Вернем с информацией о непрочитанности, а в приватном списке они уже будут прочитаны
     }

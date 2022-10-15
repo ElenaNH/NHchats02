@@ -1,3 +1,4 @@
+import chat.Chat
 import chat.ChatService
 import chat.Message
 import people.User
@@ -32,13 +33,29 @@ fun main(args: Array<String>) {
     val msg4 = ChatService.addMessage(user0, Message(from = user0, to = user1, text = "I like violets"))
     val msg5 = ChatService.addMessage(user0, Message(from = user0, to = user1, text = "Do you like flowers?"))
     val msg6 = ChatService.addMessage(user1, Message(from = user1, to = user2, text = "Hi, Pete, I'm busy!"))
+
     println("До изменения:")
     ChatService.displayMessageList(ChatService.getMessagesFromChat(msg0.from, msg0.id, 0))  // 0 означает отбор всех, начиная с msg0.id
-    ChatService.editMessageById(user0, msg0.id, "Hello dear ${user1.name}!")
+
     println("После изменения:")
+    ChatService.editMessageById(user0, msg0.id, "Hello dear ${user1.name}!")
     ChatService.displayMessageList(ChatService.getMessagesFromChat(msg0.from, msg0.id, 0))
-    ChatService.deleteMessageById(msg0.from, msg3.id)
+
+
+    println("После изменения прочитать 2 сообщения, начиная с первого непрочитанного объекта:")
+    ChatService.editMessageById(user0, msg3.id, "${msg3.text}!!!")
+    var furMessageId =  ChatService.getFirstUnreadMessageIdFromChat(user1, msg3.chat)
+    if (furMessageId == null)
+        println("No unread messages in ${msg3.chat}")
+    else {
+        println("Первое непрочитанное: id=$furMessageId")
+        ChatService.displayMessageList(ChatService.getMessagesFromChat(msg3.from, furMessageId, 2))
+    }
+
+
+
     println("После удаления:")
+    ChatService.deleteMessageById(msg0.from, msg3.id)
     ChatService.displayMessageList(ChatService.getMessagesFromChat(msg0.from, msg0.id, 0))
 
     println("+++++")
@@ -53,11 +70,12 @@ fun main(args: Array<String>) {
     println(ChatService.getChats(user2))
 
     println("# # #")
+    println("${user1.name} участвует в чатах:")
     var chats = ChatService.getChats(user1)
     for (chat in chats) {
         ChatService.displayChatInfo(user1, chat)
     }
-    println("Саша удаляет чат Пети и Саши")
+    println("Саша удаляет чат Пети и Саши.У Саши остается:")
     ChatService.deleteChat(msg6.from, msg6.chat)
     chats = ChatService.getChats(user1)
     for (chat in chats) {
