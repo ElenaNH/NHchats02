@@ -5,6 +5,11 @@ import people.*
 object ChatService {
     private var listMessages = mutableListOf<Message>()
 
+    // Сброс объекта (для тестирования)
+    fun clear() {
+        listMessages.clear()
+    }
+
     // Сообщения
 
     fun addMessage(user: User, message: Message): Message {
@@ -23,8 +28,9 @@ object ChatService {
         val founMessage = specialFullAccessGetMessageById(messageFromId) // Если не будет ошибки, то получим сообщение
         if (!(user memberOf founMessage.chat))
             throw MessageNoAccessException("Access of $user is not enough for reading message #$messageFromId")
-        // Если доступ у пользователя есть, то продолжаем
-        val selectedMessages = listMessages.filter { (!it.deleted) && (user memberOf it.chat) && (it.id >= messageFromId) }
+        // Если доступ у пользователя есть, то отбираем сообщения из чата, в котором находится сообщение foundMessage
+        val selectedMessages =
+            listMessages.filter { (!it.deleted) && (founMessage.chat == it.chat) && (it.id >= messageFromId) }
         var resultMessages = mutableListOf<Message>()
         for (msg in selectedMessages) {
             if (counter-- <= 0) break // Если отсчитали нужно количество сообщений, то выходим
@@ -59,8 +65,9 @@ object ChatService {
 
     fun getFirstUnreadMessageIdFromChat(user: User, chat: Chat): Int? {
         if (user memberOf chat) {
+            // Выбираем из данного чата все непрочитанные, адресованные текущему пользователю
             return listMessages
-                .filter { (!it.deleted) && (!it.read) && (user == it.to) }
+                .filter { (!it.deleted) && (!it.read) && (user == it.to) && (it.chat == chat) }
                 .firstOrNull()
                 ?.id
         } else {
@@ -80,7 +87,7 @@ object ChatService {
     fun deleteChat(user: User, chat: Chat) {
         if (!(user memberOf chat))
             throw MessageNoAccessException("Access of $user is not enough for deleting messages from $chat")
-        // Если доступ есть, то все удаляем из чата
+        // Если доступ есть, то все "живое" удаляем из чата. Если чат и так был удален, то просто ничего не сделаем
         val chatMessages = listMessages.filter { (!it.deleted) && (chat == it.chat) }
         for (msg in chatMessages) listMessages[msg.id] = msg.copy(deleted = true)
     }
@@ -96,22 +103,16 @@ object ChatService {
         return chts.toList()
     }
 
-    fun displayChatInfo(user: User, chat: Chat) {
-        if (user memberOf chat) {
-            println(chat)
-            println("""/${chat.lastMessage?.text ?: "No messages"}/""")
-        }
-    }
-
-    fun displayMessageList(messages: List<Message>) {
-        for (message in messages) {
-            println(message)
-        }
-    }
 
     private fun calculateChats(user: User, unreadOnly: Boolean = false): List<Chat> {
-        val userChats = listMessages
-            .filter { (!it.deleted) && (if (unreadOnly) !it.read else true) && (user memberOf it.chat) }
+        // Для непрочитанных проверяем it.to, поскольку имеются в виду сообщения, не прочитанные текущим пользователем,
+        // а для всех чатов проверяем memberOf it.chat
+        val userMessages = if (unreadOnly) {
+            listMessages.filter { (!it.deleted) && (!it.read) && (user.id == it.to.id) }
+        } else {
+            listMessages.filter { (!it.deleted) && (user memberOf it.chat) }
+        }
+        val userChats = userMessages
             .map { it.chat }
             .toSet()
             .toList()

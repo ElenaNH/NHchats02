@@ -1,6 +1,7 @@
 import chat.Chat
 import chat.ChatService
 import chat.Message
+import chat.memberOf
 import people.User
 import people.UserNotFoundException
 import people.UserService
@@ -35,28 +36,34 @@ fun main(args: Array<String>) {
     val msg6 = ChatService.addMessage(user1, Message(from = user1, to = user2, text = "Hi, Pete, I'm busy!"))
 
     println("До изменения:")
-    ChatService.displayMessageList(ChatService.getMessagesFromChat(msg0.from, msg0.id, 0))  // 0 означает отбор всех, начиная с msg0.id
+    displayMessageList(
+        ChatService.getMessagesFromChat(
+            msg0.from,
+            msg0.id,
+            0
+        )
+    )  // 0 означает отбор всех, начиная с msg0.id
 
     println("После изменения:")
     ChatService.editMessageById(user0, msg0.id, "Hello dear ${user1.name}!")
-    ChatService.displayMessageList(ChatService.getMessagesFromChat(msg0.from, msg0.id, 0))
+    displayMessageList(ChatService.getMessagesFromChat(msg0.from, msg0.id, 0))
 
 
     println("После изменения прочитать 2 сообщения, начиная с первого непрочитанного объекта:")
     ChatService.editMessageById(user0, msg3.id, "${msg3.text}!!!")
-    var furMessageId =  ChatService.getFirstUnreadMessageIdFromChat(user1, msg3.chat)
+    var furMessageId = ChatService.getFirstUnreadMessageIdFromChat(user1, msg3.chat)
     if (furMessageId == null)
         println("No unread messages in ${msg3.chat}")
     else {
         println("Первое непрочитанное: id=$furMessageId")
-        ChatService.displayMessageList(ChatService.getMessagesFromChat(msg3.from, furMessageId, 2))
+        displayMessageList(ChatService.getMessagesFromChat(msg3.from, furMessageId, 2))
     }
 
 
 
     println("После удаления:")
     ChatService.deleteMessageById(msg0.from, msg3.id)
-    ChatService.displayMessageList(ChatService.getMessagesFromChat(msg0.from, msg0.id, 0))
+    displayMessageList(ChatService.getMessagesFromChat(msg0.from, msg0.id, 0))
 
     println("+++++")
     println("For $user0:")
@@ -73,13 +80,26 @@ fun main(args: Array<String>) {
     println("${user1.name} участвует в чатах:")
     var chats = ChatService.getChats(user1)
     for (chat in chats) {
-        ChatService.displayChatInfo(user1, chat)
+        displayChatInfo(user1, chat)
     }
     println("Саша удаляет чат Пети и Саши.У Саши остается:")
     ChatService.deleteChat(msg6.from, msg6.chat)
     chats = ChatService.getChats(user1)
     for (chat in chats) {
-        ChatService.displayChatInfo(user1, chat)
+        displayChatInfo(user1, chat)
     }
 
+}
+
+fun displayChatInfo(user: User, chat: Chat) {
+    if (user memberOf chat) {
+        println(chat)
+        println("""/${chat.lastMessage?.text ?: "No messages"}/""")
+    }
+}
+
+fun displayMessageList(messages: List<Message>) {
+    for (message in messages) {
+        println(message)
+    }
 }

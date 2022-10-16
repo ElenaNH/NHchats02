@@ -31,6 +31,10 @@ object UserService {
     private var listUsers = mutableListOf<User>()
     private fun getNextUserId(): Long = nextUserId++
 
+    fun clear() {
+        listUsers.clear()
+        nextUserId = 0L
+    }
     fun add(user: User): Long {
         val registeredUser = user.copy(id = getNextUserId())
         if (!listUsers.add(registeredUser)) {
