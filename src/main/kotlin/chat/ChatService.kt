@@ -97,9 +97,17 @@ object ChatService {
     }
 
     fun getChats(user: User, unreadOnly: Boolean = false): List<Chat> {
-        var chts = calculateChats(user, unreadOnly).toMutableList()
-        // Когда последнее сообщение находится внутри чата, то оно не становится прочитанным, а остается каким было
-        for (cht in chts) cht.lastMessage = listMessages.filter { (!it.deleted) && (it.chat == cht) }.lastOrNull()
+        /* var chts = calculateChats(user, unreadOnly).toMutableList()
+         // Когда последнее сообщение находится внутри чата, то оно не становится прочитанным, а остается каким было
+         for (cht in chts) cht.lastMessage = listMessages.filter { (!it.deleted) && (it.chat == cht) }.lastOrNull()
+         return chts.toList()*/
+        val chts = calculateChats(user, unreadOnly)
+            .toMutableList()
+            .onEach {
+                it.lastMessage = listMessages
+                    .filter { msg -> (!msg.deleted) && (msg.chat == it) }
+                    .lastOrNull()
+            }
         return chts.toList()
     }
 
@@ -118,5 +126,16 @@ object ChatService {
             .toList()
         return userChats
     }
+
+    /*    private fun countChats(user: User, unreadOnly: Boolean = false): Int {
+            val myLambda = if (unreadOnly)
+                { msg: Message -> (!msg.deleted) && (!msg.read) && (user.id == msg.to.id) }
+            else
+                { msg: Message -> (!msg.deleted) && (user memberOf msg.chat) }
+
+            // val myCount = listMessages.count(myLambda) - ТАК НЕ ПОДХОДИТ: ТУТ СЧИТАЮТСЯ СООБЩЕНИЯ, А НАДО ЧАТЫ
+
+
+        }*/
 
 }
